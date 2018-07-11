@@ -41,7 +41,7 @@ bot.message_delete do |event|
                   end
 
   log_channel.send_embed do |embed|
-    embed.title = 'Message deleted'
+    embed.title = "Message deleted in ##{message.channel.name}"
     embed.description = "**Author**: #{message.author.mention}\n" \
       "**Content**:\n#{message.content}\n" \
       "#{attach_string}" \
@@ -60,7 +60,7 @@ bot.message_edit do |event|
   next unless message
 
   log_channel.send_embed do |embed|
-    embed.title = 'Message edited'
+    embed.title = "Message edited in ##{message.channel.name}"
     embed.description = "**Author**: #{message.author.mention}\n" \
       "**Original Content**:\n#{message.content}\n" \
       "**New Content**:\n#{event.message.content}\n" \
