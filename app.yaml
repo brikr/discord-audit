@@ -1,0 +1,8 @@
+runtime: ruby
+env: flex
+entrypoint: bundle exec ruby bot.rb
+
+manual_scaling:
+  instances: 1
+resources:
+  cpu: 1
