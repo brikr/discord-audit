@@ -1,7 +1,10 @@
 #!/usr/bin/env ruby
 require 'discordrb'
+require 'discordrb/webhooks'
 
-token = File.read("#{File.dirname(__FILE__)}/token").strip
+# use a separate token file for local testing
+token_file = ENV['DISCORD_AUDIT_DEV'] == 'true' ? 'token_dev' : 'token'
+token = File.read("#{File.dirname(__FILE__)}/#{token_file}").strip
 
 bot = Discordrb::Bot.new(token: token)
 
@@ -15,6 +18,8 @@ messages = {}
 keys = []
 
 bot.message do |event|
+  next if event.message.author.bot_account? # ignore messages from other bots
+
   id = event.message.id
   messages[id] = event.message
   keys << id
@@ -42,10 +47,15 @@ bot.message_delete do |event|
 
   log_channel.send_embed do |embed|
     embed.title = "Message deleted in ##{message.channel.name}"
-    embed.description = "**Author**: #{message.author.mention}\n" \
-      "**Content**:\n#{message.content}\n" \
-      "#{attach_string}" \
-      "**Deleted at**: #{Time.now.utc}"
+    embed.add_field(name: 'Author', value: message.author.mention)
+    embed.add_field(name: 'Content', value: message.content) unless message.content.empty?
+    embed.add_field(name: 'Had attachment?', value: 'Yes', inline: true) unless message.attachments.empty?
+    embed.add_field(name: 'Had embed?', value: 'Yes', inline: true) unless message.embeds.empty?
+    embed.footer = Discordrb::Webhooks::EmbedFooter.new(text: 'Originally posted')
+    embed.timestamp = message.timestamp
+    embed.color = 0xF03434
+
+    puts embed.inspect
   end
 end
 
@@ -61,13 +71,22 @@ bot.message_edit do |event|
 
   log_channel.send_embed do |embed|
     embed.title = "Message edited in ##{message.channel.name}"
-    embed.description = "**Author**: #{message.author.mention}\n" \
-      "**Original Content**:\n#{message.content}\n" \
-      "**New Content**:\n#{event.message.content}\n" \
-      "**Edited at**: #{Time.now.utc}"
+    embed.add_field(name: 'Author', value: message.author.mention)
+    embed.add_field(name: 'Original content', value: message.content) unless message.content.empty?
+    embed.add_field(name: 'New content', value: event.message.content) unless event.message.content.empty?
+    embed.add_field(name: 'Has attachment?', value: 'Yes', inline: true) unless message.attachments.empty?
+    embed.add_field(name: 'Has embed?', value: 'Yes', inline: true) unless message.embeds.empty?
+    embed.footer = Discordrb::Webhooks::EmbedFooter.new(text: 'Originally posted')
+    embed.timestamp = message.timestamp
+    embed.color = 0xF5D76E
   end
 
   messages[event.message.id] = event.message
+end
+
+# easter egg
+bot.mention do |event|
+  event.message.create_reaction("\u{1f440}")
 end
 
 bot.run
