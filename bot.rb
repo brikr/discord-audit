@@ -54,8 +54,6 @@ bot.message_delete do |event|
     embed.footer = Discordrb::Webhooks::EmbedFooter.new(text: 'Originally posted')
     embed.timestamp = message.timestamp
     embed.color = 0xF03434
-
-    puts embed.inspect
   end
 end
 
